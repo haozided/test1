@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo List</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f2;
+      --panel: #ffffff;
+      --panel-2: #eef4f2;
+      --ink: #1d2424;
+      --muted: #657070;
+      --line: #d9e0dc;
+      --accent: #0f766e;
+      --accent-strong: #115e59;
+      --amber: #c77700;
+      --rose: #b4233c;
+      --shadow: 0 18px 45px rgba(24, 40, 38, 0.13);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(145deg, rgba(15, 118, 110, 0.1), transparent 34%),
+        linear-gradient(315deg, rgba(199, 119, 0, 0.12), transparent 32%),
+        var(--bg);
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4.2rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .title-block p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(86px, 1fr));
+      gap: 10px;
+      min-width: 292px;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 8px 24px rgba(29, 36, 36, 0.06);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.55rem;
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .composer,
+    .list-panel {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .composer {
+      padding: 18px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      min-height: 44px;
+      padding: 0 12px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.13);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .primary-btn {
+      width: 100%;
+      min-height: 46px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .primary-btn:hover {
+      background: var(--accent-strong);
+      transform: translateY(-1px);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(238, 244, 242, 0.7);
+      border-radius: 8px 8px 0 0;
+    }
+
+    .search {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .search:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.13);
+    }
+
+    .filters {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 76px);
+      gap: 4px;
+      padding: 4px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .filter-btn {
+      min-height: 34px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    .filter-btn.active {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .todo-list {
+      display: grid;
+      gap: 10px;
+      min-height: 360px;
+      padding: 14px;
+      margin: 0;
+      list-style: none;
+    }
+
+    .todo-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 72px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .check {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      background: #fff;
+      color: #fff;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .todo-item.done .check {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .todo-main {
+      min-width: 0;
+    }
+
+    .todo-title {
+      display: block;
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 4px 6px;
+      color: var(--ink);
+      background: transparent;
+      font-weight: 800;
+      outline: none;
+    }
+
+    .todo-title:focus {
+      border-color: var(--accent);
+      background: var(--panel-2);
+    }
+
+    .todo-item.done .todo-title {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+      padding-left: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 0 9px;
+      background: var(--panel-2);
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .pill.high {
+      background: #fff0f3;
+      color: var(--rose);
+    }
+
+    .pill.medium {
+      background: #fff6df;
+      color: var(--amber);
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: 1rem;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      background: #e4ece9;
+      color: var(--ink);
+    }
+
+    .empty {
+      display: none;
+      place-items: center;
+      min-height: 360px;
+      padding: 32px;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .empty.show {
+      display: grid;
+    }
+
+    @media (max-width: 820px) {
+      .app {
+        width: min(100% - 24px, 620px);
+        padding: 22px 0;
+      }
+
+      .topbar,
+      .workspace,
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        min-width: 0;
+      }
+
+      .composer {
+        position: static;
+      }
+
+      .filters {
+        width: 100%;
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .stats,
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      .todo-item {
+        grid-template-columns: auto 1fr;
+      }
+
+      .actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="title-block">
+        <h1>Todo List</h1>
+        <p>今天要做的事，清清楚楚放在这里。</p>
+      </div>
+      <section class="stats" aria-label="任务统计">
+        <div class="stat">
+          <strong id="totalCount">0</strong>
+          <span>全部</span>
+        </div>
+        <div class="stat">
+          <strong id="activeCount">0</strong>
+          <span>待完成</span>
+        </div>
+        <div class="stat">
+          <strong id="doneCount">0</strong>
+          <span>已完成</span>
+        </div>
+      </section>
+    </header>
+
+    <section class="workspace">
+      <form class="composer" id="todoForm">
+        <div class="field">
+          <label for="todoText">任务</label>
+          <input id="todoText" type="text" placeholder="写下一个新任务" maxlength="80" autocomplete="off" required>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="todoDate">日期</label>
+            <input id="todoDate" type="date">
+          </div>
+          <div class="field">
+            <label for="todoPriority">优先级</label>
+            <select id="todoPriority">
+              <option value="low">普通</option>
+              <option value="medium">重要</option>
+              <option value="high">紧急</option>
+            </select>
+          </div>
+        </div>
+        <button class="primary-btn" type="submit">添加任务</button>
+      </form>
+
+      <section class="list-panel" aria-label="任务列表">
+        <div class="controls">
+          <input class="search" id="searchInput" type="search" placeholder="搜索任务" autocomplete="off">
+          <div class="filters" role="tablist" aria-label="筛选任务">
+            <button class="filter-btn active" type="button" data-filter="all">全部</button>
+            <button class="filter-btn" type="button" data-filter="active">待办</button>
+            <button class="filter-btn" type="button" data-filter="done">完成</button>
+          </div>
+        </div>
+        <ul class="todo-list" id="todoList"></ul>
+        <div class="empty" id="emptyState">还没有匹配的任务</div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const storageKey = "codex-todo-list";
+    const form = document.querySelector("#todoForm");
+    const textInput = document.querySelector("#todoText");
+    const dateInput = document.querySelector("#todoDate");
+    const priorityInput = document.querySelector("#todoPriority");
+    const searchInput = document.querySelector("#searchInput");
+    const list = document.querySelector("#todoList");
+    const emptyState = document.querySelector("#emptyState");
+    const filterButtons = document.querySelectorAll(".filter-btn");
+    const totalCount = document.querySelector("#totalCount");
+    const activeCount = document.querySelector("#activeCount");
+    const doneCount = document.querySelector("#doneCount");
+
+    let todos = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    let filter = "all";
+
+    const priorityLabels = {
+      low: "普通",
+      medium: "重要",
+      high: "紧急"
+    };
+
+    function createId() {
+      if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return window.crypto.randomUUID();
+      }
+      return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function save() {
+      localStorage.setItem(storageKey, JSON.stringify(todos));
+    }
+
+    function formatDate(value) {
+      if (!value) return "未设日期";
+      const date = new Date(`${value}T00:00:00`);
+      return new Intl.DateTimeFormat("zh-CN", {
+        month: "short",
+        day: "numeric"
+      }).format(date);
+    }
+
+    function getVisibleTodos() {
+      const query = searchInput.value.trim().toLowerCase();
+      return todos.filter((todo) => {
+        const matchesFilter =
+          filter === "all" ||
+          (filter === "active" && !todo.done) ||
+          (filter === "done" && todo.done);
+        const matchesSearch = todo.text.toLowerCase().includes(query);
+        return matchesFilter && matchesSearch;
+      });
+    }
+
+    function renderStats() {
+      const done = todos.filter((todo) => todo.done).length;
+      totalCount.textContent = todos.length;
+      activeCount.textContent = todos.length - done;
+      doneCount.textContent = done;
+    }
+
+    function render() {
+      const visibleTodos = getVisibleTodos();
+      list.innerHTML = "";
+      emptyState.classList.toggle("show", visibleTodos.length === 0);
+
+      visibleTodos.forEach((todo) => {
+        const item = document.createElement("li");
+        item.className = `todo-item${todo.done ? " done" : ""}`;
+        item.dataset.id = todo.id;
+
+        const check = document.createElement("button");
+        check.className = "check";
+        check.type = "button";
+        check.title = todo.done ? "标记为待办" : "标记为完成";
+        check.textContent = "✓";
+
+        const main = document.createElement("div");
+        main.className = "todo-main";
+
+        const title = document.createElement("input");
+        title.className = "todo-title";
+        title.value = todo.text;
+        title.maxLength = 80;
+        title.ariaLabel = "编辑任务";
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const priority = document.createElement("span");
+        priority.className = `pill ${todo.priority}`;
+        priority.textContent = priorityLabels[todo.priority] || priorityLabels.low;
+
+        const date = document.createElement("span");
+        date.className = "pill";
+        date.textContent = formatDate(todo.date);
+
+        meta.append(priority, date);
+        main.append(title, meta);
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const duplicate = document.createElement("button");
+        duplicate.className = "icon-btn";
+        duplicate.type = "button";
+        duplicate.title = "复制任务";
+        duplicate.textContent = "+";
+
+        const remove = document.createElement("button");
+        remove.className = "icon-btn";
+        remove.type = "button";
+        remove.title = "删除任务";
+        remove.textContent = "×";
+
+        actions.append(duplicate, remove);
+        item.append(check, main, actions);
+        list.append(item);
+
+        check.addEventListener("click", () => {
+          todo.done = !todo.done;
+          save();
+          render();
+        });
+
+        title.addEventListener("change", () => {
+          const value = title.value.trim();
+          if (!value) {
+            render();
+            return;
+          }
+          todo.text = value;
+          save();
+          render();
+        });
+
+        duplicate.addEventListener("click", () => {
+          todos.unshift({
+            ...todo,
+            id: createId(),
+            text: `${todo.text} 副本`,
+            done: false
+          });
+          save();
+          render();
+        });
+
+        remove.addEventListener("click", () => {
+          todos = todos.filter((itemTodo) => itemTodo.id !== todo.id);
+          save();
+          render();
+        });
+      });
+
+      renderStats();
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const text = textInput.value.trim();
+      if (!text) return;
+
+      todos.unshift({
+        id: createId(),
+        text,
+        date: dateInput.value,
+        priority: priorityInput.value,
+        done: false
+      });
+
+      form.reset();
+      priorityInput.value = "low";
+      textInput.focus();
+      save();
+      render();
+    });
+
+    searchInput.addEventListener("input", render);
+
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        filter = button.dataset.filter;
+        filterButtons.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        render();
+      });
+    });
+
+    if (todos.length === 0) {
+      todos = [
+        {
+          id: createId(),
+          text: "整理今天的待办事项",
+          date: new Date().toISOString().slice(0, 10),
+          priority: "medium",
+          done: false
+        },
+        {
+          id: createId(),
+          text: "完成一个小目标",
+          date: "",
+          priority: "low",
+          done: true
+        }
+      ];
+      save();
+    }
+
+    render();
+  </script>
+</body>
+</html>
