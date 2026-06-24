@@ -10,16 +10,39 @@
     "build:electron": "tsc -p tsconfig.electron.json",
     "postinstall": "node scripts/install-electron.cjs",
     "repair:electron": "node scripts/install-electron.cjs",
+    "package:win": "npm run repair:electron && npm run build && node scripts/package-win.cjs",
     "start": "npm run repair:electron && npm run build && electron .",
     "test": "vitest run",
     "test:ui": "vitest"
   },
+  "build": {
+    "appId": "com.codex.list",
+    "productName": "Codex List",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "dist-electron/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-${arch}.exe"
+    }
+  },
   "dependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "electron": "^33.3.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "vite": "^6.0.7"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
@@ -27,8 +50,12 @@
     "@types/node": "^22.10.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.3.1",
+    "electron-builder": "^26.15.3",
     "jsdom": "^25.0.1",
     "typescript": "^5.7.2",
+    "vite": "^6.0.7",
     "vitest": "^2.1.8"
   }
 }
