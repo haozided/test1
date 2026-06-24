@@ -10,7 +10,7 @@
     "build:electron": "tsc -p tsconfig.electron.json",
     "postinstall": "node scripts/install-electron.cjs",
     "repair:electron": "node scripts/install-electron.cjs",
-    "start": "npm run build && electron .",
+    "start": "npm run repair:electron && npm run build && electron .",
     "test": "vitest run",
     "test:ui": "vitest"
   },
