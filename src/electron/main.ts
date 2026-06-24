@@ -5,8 +5,10 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+let mainWindow: BrowserWindow | null = null;
+
 const createWindow = () => {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1120,
     height: 760,
     minWidth: 760,
@@ -22,6 +24,10 @@ const createWindow = () => {
   });
 
   mainWindow.removeMenu();
+
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
 
   if (process.env.VITE_DEV_SERVER_URL) {
     void mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
